@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier III — the curio cabinet</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f1029;--paper:#f3ead7;--mute:#a9a6c4;--verd:#3fb8a0;--saff:#f2b134;--rose:#e8546f;
+--serif:'Fraunces',Georgia,'Times New Roman',serif;--sans:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:radial-gradient(1200px 700px at 50% 0%,#14403f 0%,var(--ink) 62%);color:var(--paper);font-family:var(--sans);line-height:1.5;padding:max(20px,env(safe-area-inset-top)) 20px 28px}
+main{max-width:1060px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:36px;align-items:center;min-height:calc(100vh - 56px)}
+@media(max-width:820px){main{grid-template-columns:1fr;gap:20px}}
+.canvaswrap{aspect-ratio:1;width:100%;max-width:520px;margin:0 auto;border-radius:6px;overflow:hidden;box-shadow:0 0 0 10px #12363a,0 0 0 11px #2f6f6c,0 30px 60px #0008}
+canvas{width:100%;height:100%;display:block;background:#ece1c8}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.6rem,6vw,4.4rem);line-height:1;letter-spacing:-.02em}
+h1 i{font-weight:400;color:var(--saff)}
+.lede{font-family:var(--serif);font-size:1.2rem;color:var(--mute);margin:18px 0 26px;max-width:34ch}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px}
+.chip{--c:var(--paper);border:1.5px solid var(--c);color:var(--c);background:none;border-radius:999px;padding:9px 16px;font:600 .92rem var(--sans);cursor:pointer;transition:.18s}
+.chip[aria-pressed=true]{background:var(--c);color:var(--ink)}
+button:focus-visible{outline:3px solid var(--saff);outline-offset:3px}
+.go{background:var(--saff);color:var(--ink);border:0;border-radius:4px;padding:14px 26px;font:600 1.05rem var(--sans);cursor:pointer}
+.go.ghost{background:none;color:var(--paper);border:1.5px solid var(--mute);margin-left:10px}
+.go:hover{filter:brightness(1.08)}
+.meta{display:flex;justify-content:space-between;color:var(--mute);font-size:.9rem;margin-bottom:10px}
+.bar{height:3px;background:#24474a;margin-bottom:26px}.bar b{display:block;height:100%;width:0;background:var(--saff);transition:width .4s}
+.cat{font-weight:600;margin-bottom:8px}
+.q{font-family:var(--serif);font-size:clamp(1.5rem,3.2vw,2.1rem);line-height:1.2;margin-bottom:24px;max-width:26ch}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:#ffffff0d;color:var(--paper);border:1.5px solid #ffffff26;border-radius:6px;padding:13px 16px;font:400 1.02rem var(--sans);cursor:pointer;display:flex;gap:14px;transition:.15s}
+.opt:hover:not(:disabled){background:#ffffff1c;transform:translateX(4px)}
+.opt kbd{font:600 .8rem var(--sans);color:var(--mute);min-width:1ch}
+.opt.ok{background:#3fb8a033;border-color:var(--verd)}
+.opt.no{background:#e8546f2e;border-color:var(--rose)}
+.opt:disabled{cursor:default;color:inherit}
+.why{margin-top:18px;font-family:var(--serif);font-size:1.08rem;color:#d9d3e8;min-height:3.2em}
+.next{margin-top:12px}
+.hide{display:none!important}
+.score{font-family:var(--serif);font-size:5rem;line-height:1;font-weight:600}
+.rows{margin:22px 0;display:grid;gap:9px}
+.row{display:grid;grid-template-columns:90px 1fr 40px;gap:10px;align-items:center;font-size:.92rem}
+.row span{height:8px;background:#24474a;border-radius:4px;overflow:hidden}.row span i{display:block;height:100%}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+ <div class="canvaswrap"><canvas id="cv" width="900" height="900" aria-label="Your painting, which grows with every correct answer"></canvas></div>
+ <section>
+  <div id="start">
+   <h1>Atelier III<br><i>the curio cabinet</i></h1>
+   <p class="lede">Forty questions on animals, tech, sport, food and myth. Twenty are drawn each round, and every right answer paints a stroke.</p>
+   <div class="chips" id="chips"></div>
+   <button class="go" id="begin">Begin the painting</button>
+  </div>
+  <div id="play" class="hide">
+   <div class="meta"><span id="cnt"></span><span id="streak"></span></div>
+   <div class="bar"><b id="prog"></b></div>
+   <div class="cat" id="cat"></div>
+   <h2 class="q" id="q"></h2>
+   <div class="opts" id="opts"></div>
+   <p class="why" id="why" aria-live="polite"></p>
+   <button class="go next hide" id="next">Next question</button>
+  </div>
+  <div id="end" class="hide">
+   <p class="lede" id="title" style="margin-bottom:6px"></p>
+   <div class="score" id="score"></div>
+   <div class="rows" id="rows"></div>
+   <button class="go" id="again">Paint again</button><button class="go ghost" id="save">Save painting</button>
+  </div>
+ </section>
+</main>
+<script>
+const C={Animals:'#ff8a4c',Tech:'#3fd0e0',Sports:'#8bc34a',Food:'#e8546f',Myth:'#f2b134'};
+// [category, question, correct, wrong1, wrong2, wrong3, explanation]
+const Q=[
+["Animals","What is the largest living mammal?","Blue whale","African elephant","Sperm whale","Giraffe","Blue whales reach about 30 m and 150 tonnes."],
+["Animals","How many hearts does an octopus have?","3","1","2","4","Two pump blood through the gills and one serves the rest of the body."],
+["Animals","Which is the largest living bird?","Ostrich","Emu","Cassowary","Penguin","Ostriches can stand 2.7 m tall and cannot fly."],
+["Animals","A group of crows is called a…","Murder","Flock","Parliament","Colony","It's one of English's famous collective nouns."],
+["Animals","Which is the fastest land animal?","Cheetah","Pronghorn","Lion","Greyhound","Cheetahs sprint at up to roughly 100 km/h."],
+["Animals","How do honeybees tell hivemates where food is?","Waggle dance","Humming a tune","Scent trails only","Wing clapping","Angle and duration of the dance encode direction and distance."],
+["Animals","What is a baby kangaroo called?","Joey","Cub","Pup","Kit","Joeys finish developing in their mother's pouch."],
+["Animals","Which of these mammals lays eggs?","Platypus","Armadillo","Pangolin","Sloth","Platypuses and echidnas are the monotremes."],
+["Tech","What does CPU stand for?","Central Processing Unit","Computer Personal Unit","Central Program Utility","Core Processing Unit","It executes the instructions that make a computer work."],
+["Tech","Who invented the World Wide Web?","Tim Berners-Lee","Vint Cerf","Bill Gates","Steve Jobs","Proposed at CERN in 1989; the internet itself is older."],
+["Tech","The binary number 101 equals what in decimal?","5","3","6","7","1×4 + 0×2 + 1×1 = 5."],
+["Tech","Which language runs natively in web browsers?","JavaScript","Python","C++","Rust","Every major browser ships a JavaScript engine."],
+["Tech","When was the first iPhone released?","2007","2005","2009","2010","Steve Jobs unveiled it in January 2007; it shipped that June."],
+["Tech","What does HTTP stand for?","Hypertext Transfer Protocol","High Transfer Text Protocol","Hyperlink Text Transmission Protocol","Hosted Transfer Tool Protocol","It's the protocol browsers use to talk to web servers."],
+["Tech","How many bits are in a byte?","8","4","16","10","Eight bits can represent 256 different values."],
+["Tech","Alan Turing is best known for…","Defining computation and breaking Enigma","Inventing the transistor","Building the first PC","Inventing email","The Turing machine is a cornerstone of computer science."],
+["Sports","How many players per side are on the pitch in football (soccer)?","11","9","10","12","Eleven including the goalkeeper."],
+["Sports","Where were the first modern Olympics held in 1896?","Athens","Paris","London","Rome","Held in the Panathenaic Stadium."],
+["Sports","How many points is a touchdown worth in American football?","6","7","5","3","Plus a chance at an extra point or two-point conversion."],
+["Sports","How long is a marathon?","42.195 km","40 km","45 km","26 km","It's 26 miles 385 yards, standardized at the 1908 London Olympics."],
+["Sports","Which sport uses a shuttlecock?","Badminton","Squash","Tennis","Table tennis","Also called a birdie."],
+["Sports","What surface is Wimbledon played on?","Grass","Clay","Hard court","Carpet","It's the only Grand Slam still on grass."],
+["Sports","How many rings are on the Olympic flag?","5","4","6","7","They represent the five inhabited continents in the original symbolism."],
+["Sports","In golf, one stroke under par on a hole is a…","Birdie","Eagle","Bogey","Albatross","An eagle is two under; a bogey is one over."],
+["Food","Which country is sushi from?","Japan","China","Korea","Thailand","Sushi is vinegared rice, often with raw fish."],
+["Food","What is the main ingredient of guacamole?","Avocado","Tomato","Lime","Pea","The word comes from the Nahuatl ahuacamolli."],
+["Food","Saffron comes from which plant?","Crocus flower","Palm bark","Chili seeds","Turmeric root","Each flower yields just three stigmas, hence the price."],
+["Food","Which cheese is traditional in a Greek salad?","Feta","Halloumi","Gouda","Brie","Brined cheese made from sheep's or sheep-and-goat milk."],
+["Food","Which pasta's name means \"little worms\"?","Vermicelli","Farfalle","Penne","Orecchiette","Farfalle are butterflies; orecchiette are little ears."],
+["Food","Kimchi is traditionally made by fermenting mainly…","Cabbage","Radish only","Cucumber","Soybeans","Usually napa cabbage with chili, garlic and ginger."],
+["Food","Tofu is made from…","Soybeans","Rice","Chickpeas","Wheat","Soy milk is curdled and pressed into blocks."],
+["Food","Espresso was invented in which country?","Italy","France","Brazil","Turkey","Machines appeared in Italy in the early 1900s."],
+["Myth","Who is king of the Greek gods?","Zeus","Poseidon","Hades","Apollo","Ruler of Mount Olympus and god of the sky."],
+["Myth","Which Norse god wields the hammer Mjölnir?","Thor","Odin","Loki","Baldr","Thor is the god of thunder."],
+["Myth","Which hero's one weak spot was his heel?","Achilles","Heracles","Perseus","Theseus","His mother held him by the heel when dipping him in the Styx."],
+["Myth","Which Egyptian god has a jackal's head?","Anubis","Horus","Ra","Osiris","Anubis guided souls and oversaw embalming."],
+["Myth","Who flew too close to the sun on wax wings?","Icarus","Prometheus","Orpheus","Perseus","The wax melted and he fell into the sea."],
+["Myth","Which monster had snakes for hair?","Medusa","Siren","Harpy","Hydra","Her gaze turned onlookers to stone."],
+["Myth","What is the Roman name for Zeus?","Jupiter","Mars","Neptune","Saturn","Jupiter ruled the Roman pantheon."],
+["Myth","Which Hindu god has an elephant's head?","Ganesha","Hanuman","Vishnu","Shiva","Remover of obstacles and son of Shiva and Parvati."]
+];
+const $=id=>document.getElementById(id),cv=$('cv'),x=cv.getContext('2d'),W=900,N=20;
+let sel=new Set(Object.keys(C)),deck,i,score,streak,shapes,tally,locked,raf;
+const rnd=(a,b)=>a+Math.random()*(b-a),shuf=a=>{a=[...a];for(let n=a.length;n;){const j=Math.random()*n--|0;[a[n],a[j]]=[a[j],a[n]]}return a};
+
+const chips=$('chips');
+Object.keys(C).forEach(k=>{const b=document.createElement('button');b.className='chip';b.textContent=k;b.style.setProperty('--c',C[k]);b.setAttribute('aria-pressed',true);
+ b.onclick=()=>{const on=b.getAttribute('aria-pressed')!=='true';if(!on&&sel.size===1)return;b.setAttribute('aria-pressed',on);on?sel.add(k):sel.delete(k)};chips.append(b)});
+
+function bg(){const g=x.createLinearGradient(0,0,W,W);g.addColorStop(0,'#f3ead7');g.addColorStop(1,'#e4d6b6');x.fillStyle=g;x.fillRect(0,0,W,W);
+ x.globalAlpha=.05;for(let n=0;n<900;n++){x.fillStyle=n%2?'#000':'#fff';x.fillRect((n*97)%W,(n*53)%W,2,2)}x.globalAlpha=1}
+function draw(s,t){const e=1-Math.pow(1-t,3),r=s.r*e;x.save();x.translate(s.x,s.y);x.rotate(s.a);x.fillStyle=x.strokeStyle=s.c;x.lineCap='round';
+ if(s.k==='x'){x.globalAlpha=.35*t;x.lineWidth=2;x.strokeStyle='#5c5a6e';x.beginPath();x.moveTo(-r,0);x.lineTo(r,s.r*.2*e);x.stroke()}
+ else if(s.k==='Animals'){x.globalAlpha=.85*t;x.beginPath();x.ellipse(0,r*.25,r*.42,r*.34,0,0,7);x.fill();[[-.55,-.25],[-.2,-.6],[.2,-.6],[.55,-.25]].forEach(([a,b])=>{x.beginPath();x.ellipse(a*r,b*r,r*.14,r*.19,a,0,7);x.fill()})}
+ else if(s.k==='Tech'){for(let a=-1;a<2;a++)for(let b=-1;b<2;b++){x.globalAlpha=((a+b)&1?.45:.9)*t;x.fillRect(a*r*.42-r*.17,b*r*.42-r*.17,r*.34,r*.34)}x.lineWidth=3;x.globalAlpha=t;x.beginPath();x.moveTo(-r*.85,-r*.6);x.lineTo(-r*.6,-r*.6);x.lineTo(-r*.6,-r*.85);x.stroke()}
+ else if(s.k==='Sports'){x.lineWidth=6;x.globalAlpha=.9*t;x.beginPath();x.arc(0,0,r*.7,0,7);x.stroke();x.lineWidth=4;x.globalAlpha=.7*t;x.beginPath();x.arc(-r*.7,0,r*.55,-.9,.9);x.stroke();x.beginPath();x.arc(r*.7,0,r*.55,Math.PI-.9,Math.PI+.9);x.stroke();x.beginPath();x.moveTo(-r*.7,0);x.lineTo(r*.7,0);x.stroke()}
+ else if(s.k==='Food'){x.globalAlpha=.85*t;x.beginPath();x.moveTo(0,0);x.arc(0,0,r*.8,0,4.2);x.closePath();x.fill();x.globalAlpha=.55*t;x.beginPath();x.moveTo(r*.15,-r*.1);x.arc(r*.15,-r*.1,r*.8,4.4,6.1);x.closePath();x.fill()}
+ else{x.globalAlpha=.9*t;x.beginPath();x.arc(0,0,r*.7,0,7);x.fill();x.fillStyle='#ece1c8';x.globalAlpha=1;x.beginPath();x.arc(r*.3,-r*.1,r*.6,0,7);x.fill();x.fillStyle=s.c;x.globalAlpha=t;x.beginPath();x.arc(r*.45,-r*.35,r*.07,0,7);x.fill()}
+ x.restore()}
+function paint(){bg();shapes.forEach(s=>draw(s,Math.min(1,(performance.now()-s.t0)/900)));if(shapes.some(s=>performance.now()-s.t0<900))raf=requestAnimationFrame(paint)}
+function stroke(cat,ok){shapes.push({k:ok?cat:'x',c:ok?C[cat]:'#5c5a6e',x:rnd(130,770),y:rnd(130,770),r:ok?rnd(90,170):rnd(150,330),a:rnd(0,6.28),t0:performance.now()});cancelAnimationFrame(raf);paint()}
+
+function start(){deck=shuf(Q.filter(q=>sel.has(q[0]))).slice(0,N);i=0;score=0;streak=0;shapes=[];tally={};sel.forEach(k=>tally[k]=[0,0]);
+ ['start','end'].forEach(id=>$(id).classList.add('hide'));$('play').classList.remove('hide');paint();show()}
+function show(){locked=false;const q=deck[i];$('cnt').textContent=`Question ${i+1} of ${deck.length}`;$('streak').textContent=streak>1?`${streak} in a row`:'';
+ $('prog').style.width=i/deck.length*100+'%';$('cat').textContent=q[0];$('cat').style.color=C[q[0]];$('q').textContent=q[1];$('why').textContent='';$('next').classList.add('hide');
+ const o=$('opts');o.innerHTML='';shuf(q.slice(2,6)).forEach((t,n)=>{const b=document.createElement('button');b.className='opt';b.innerHTML=`<kbd>${n+1}</kbd><span></span>`;b.lastChild.textContent=t;b.onclick=()=>pick(b,t);o.append(b)})}
+function pick(b,t){if(locked)return;locked=true;const q=deck[i],ok=t===q[2];
+ [...$('opts').children].forEach(e=>{e.disabled=true;if(e.lastChild.textContent===q[2])e.classList.add('ok')});if(!ok)b.classList.add('no');
+ tally[q[0]][1]++;if(ok){score++;streak++;tally[q[0]][0]++}else streak=0;stroke(q[0],ok);
+ $('why').textContent=(ok?'Yes. ':'Not quite. ')+q[6];$('next').textContent=i+1<deck.length?'Next question':'See my painting';$('next').classList.remove('hide');$('next').focus()}
+function next(){i++;i<deck.length?show():finish()}
+function finish(){$('play').classList.add('hide');$('end').classList.remove('hide');const p=score/deck.length;
+ $('title').textContent=p>.9?'Curator of curiosities. A masterwork.':p>.7?'Well-stocked mind.':p>.45?'A promising studio.':'Every master starts with a blank canvas.';
+ $('score').textContent=`${score}/${deck.length}`;$('rows').innerHTML=Object.entries(tally).filter(([,v])=>v[1]).map(([k,v])=>`<div class="row"><b>${k.slice(0,5)}${k.length>5?'.':''}</b><span><i style="width:${v[0]/v[1]*100}%;background:${C[k]}"></i></span><em>${v[0]}/${v[1]}</em></div>`).join('')}
+
+$('begin').onclick=start;$('next').onclick=next;$('again').onclick=()=>{$('end').classList.add('hide');$('start').classList.remove('hide');shapes=[];bg()};
+$('save').onclick=()=>{const a=document.createElement('a');a.download='my-atelier-curios-painting.png';a.href=cv.toDataURL('image/png');a.click()};
+addEventListener('keydown',e=>{if($('play').classList.contains('hide'))return;if(/^[1-4]$/.test(e.key)&&!locked)$('opts').children[e.key-1]?.click();else if(e.key==='Enter'&&locked){e.preventDefault();next()}});
+shapes=[];bg();
+</script>
+</body>
+</html>
